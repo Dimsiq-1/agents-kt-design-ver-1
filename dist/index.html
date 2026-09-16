@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agents.KT - Typed Agent Runtime for the JVM</title>
+    <meta
+      name="description"
+      content="Agents.KT is a Kotlin-first runtime for typed agents, compiler-checked composition, least-privilege tools, MCP, and audit evidence."
+    />
+    <meta property="og:title" content="Agents.KT - Typed Agent Runtime for the JVM" />
+    <meta
+      property="og:description"
+      content="Typed agent contracts, least-privilege tools, MCP-native surfaces, and audit evidence for Kotlin and JVM teams."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2310080b'/%3E%3Cpath d='M16 19h32v8H25v10h23v8H16V19z' fill='%23fe0091'/%3E%3Cpath d='M24 27h16l8 18H37l-3-7H24v-11z' fill='%23fe4252'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --ink: #10080b;
+        --ink-soft: #21171b;
+        --paper: #fff8fb;
+        --paper-2: #fff1f6;
+        --line: rgba(16, 8, 11, 0.14);
+        --muted: #675b61;
+        --muted-dark: #cdbec5;
+        --pink: #fe0091;
+        --red: #fe4252;
+        --blush: #e7bcc0;
+        --white: #ffffff;
+        --radius: 8px;
+        --shadow: 0 24px 70px rgba(16, 8, 11, 0.15);
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--paper);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.55;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      code,
+      pre {
+        font-family:
+          "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      .site-shell {
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(16, 8, 11, 0.9);
+        color: var(--white);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav-inner,
+      .section-inner,
+      .hero-inner {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .nav-inner {
+        display: flex;
+        min-height: 68px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .brand img {
+        width: 42px;
+        height: auto;
+        filter: drop-shadow(0 8px 24px rgba(254, 0, 145, 0.18));
+      }
+
+      .brand span {
+        color: var(--white);
+        font-size: 1rem;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 0.92rem;
+      }
+
+      .nav-links a {
+        border-radius: 999px;
+        transition:
+          color 160ms ease,
+          background 160ms ease;
+      }
+
+      .nav-links a:focus-visible,
+      .button:focus-visible,
+      .copy-button:focus-visible {
+        outline: 3px solid rgba(254, 66, 82, 0.46);
+        outline-offset: 4px;
+      }
+
+      .nav-links a:hover {
+        color: var(--white);
+      }
+
+      .nav-action {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        padding: 0 15px;
+        color: var(--white);
+      }
+
+      .hero {
+        position: relative;
+        background:
+          linear-gradient(rgba(16, 8, 11, 0.96), rgba(16, 8, 11, 0.93)),
+          url("assets/agents-kt-pattern.png");
+        background-position: center;
+        background-size: 920px auto;
+        color: var(--white);
+      }
+
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+        padding: 58px 0 46px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 999px;
+        padding: 7px 12px;
+        background: rgba(255, 255, 255, 0.07);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--pink);
+        content: "";
+        box-shadow: 0 0 22px rgba(254, 0, 145, 0.78);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 960px;
+        font-size: clamp(3.05rem, 6.4vw, 6.15rem);
+        line-height: 0.9;
+        letter-spacing: 0;
+      }
+
+      h1 span {
+        display: block;
+      }
+
+      .hero-lede {
+        max-width: 800px;
+        color: rgba(255, 255, 255, 0.76);
+        font-size: clamp(1.1rem, 2vw, 1.45rem);
+        line-height: 1.45;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 50px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        padding: 0 20px;
+        font-weight: 800;
+        transition:
+          transform 160ms ease,
+          border-color 160ms ease,
+          background 160ms ease;
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+      }
+
+      .button-primary {
+        background: var(--pink);
+        color: var(--white);
+        box-shadow: 0 18px 38px rgba(254, 0, 145, 0.26);
+      }
+
+      .button-secondary {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--white);
+      }
+
+      .hero-board {
+        display: none;
+        grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .code-window {
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: var(--radius);
+        background: rgba(0, 0, 0, 0.42);
+        box-shadow: var(--shadow);
+      }
+
+      .window-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+        padding: 12px 14px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 0.82rem;
+      }
+
+      .window-dots {
+        display: flex;
+        gap: 7px;
+      }
+
+      .window-dots span {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.24);
+      }
+
+      pre {
+        margin: 0;
+        overflow-x: auto;
+        padding: 22px;
+        color: #ffe9f5;
+        font-size: clamp(0.78rem, 1.5vw, 0.94rem);
+        line-height: 1.72;
+      }
+
+      .token {
+        color: #ff7ec6;
+      }
+
+      .type {
+        color: #ffd5dc;
+      }
+
+      .string {
+        color: #ffb0bb;
+      }
+
+      .comment {
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      .signal-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .signal {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: var(--radius);
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .signal strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 1.05rem;
+      }
+
+      .signal span {
+        color: rgba(255, 255, 255, 0.66);
+        font-size: 0.92rem;
+      }
+
+      .stats-strip {
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        background: var(--ink-soft);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1px;
+      }
+
+      .stat {
+        min-height: 104px;
+        padding: 20px;
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .stat:first-child {
+        border-left: 0;
+      }
+
+      .stat b {
+        display: block;
+        color: var(--white);
+        font-size: 1.35rem;
+      }
+
+      .stat span {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.9rem;
+      }
+
+      section {
+        padding: 88px 0;
+      }
+
+      .section-label {
+        margin-bottom: 12px;
+        color: var(--pink);
+        font-size: 0.78rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .section-heading {
+        max-width: 760px;
+        font-size: clamp(2rem, 4vw, 4.6rem);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      .section-copy {
+        max-width: 720px;
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 1.08rem;
+      }
+
+      .install {
+        background: var(--white);
+      }
+
+      .install-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+        gap: 34px;
+        align-items: center;
+      }
+
+      .install-card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--ink);
+        color: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .install-card pre {
+        min-height: 210px;
+      }
+
+      .copy-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 12px 14px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 0.86rem;
+      }
+
+      .copy-button {
+        min-height: 38px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        padding: 0 13px;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--white);
+        cursor: pointer;
+        font: inherit;
+        font-weight: 800;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 38px;
+      }
+
+      .feature {
+        min-height: 260px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .feature-icon {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        margin-bottom: 44px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--ink);
+        color: var(--white);
+        font-weight: 900;
+      }
+
+      .feature h3,
+      .primitive h3,
+      .proof h3 {
+        margin-bottom: 10px;
+        font-size: 1.22rem;
+        line-height: 1.2;
+      }
+
+      .feature p,
+      .primitive p,
+      .proof p {
+        color: var(--muted);
+      }
+
+      .dark-band {
+        background: var(--ink);
+        color: var(--white);
+      }
+
+      .dark-band .section-copy,
+      .dark-band .primitive p,
+      .dark-band .proof p {
+        color: var(--muted-dark);
+      }
+
+      .primitive-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 1px;
+        margin-top: 42px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .primitive {
+        min-height: 220px;
+        padding: 22px;
+        background: var(--ink-soft);
+      }
+
+      .operator {
+        display: inline-block;
+        margin-bottom: 48px;
+        color: var(--pink);
+        font-family:
+          "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 1.45rem;
+        font-weight: 900;
+      }
+
+      .proof-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+        gap: 22px;
+        margin-top: 40px;
+        align-items: start;
+      }
+
+      .proof {
+        border-left: 3px solid var(--pink);
+        padding: 8px 0 8px 22px;
+      }
+
+      .release-panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--white);
+        box-shadow: 0 20px 60px rgba(16, 8, 11, 0.08);
+      }
+
+      .release-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        border-bottom: 1px solid var(--line);
+        padding: 18px 20px;
+      }
+
+      .release-row:last-child {
+        border-bottom: 0;
+      }
+
+      .release-row span {
+        color: var(--muted);
+      }
+
+      .protocols {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 38px;
+      }
+
+      .protocol {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: var(--radius);
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .protocol strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .protocol span {
+        color: var(--muted-dark);
+      }
+
+      .security {
+        background:
+          linear-gradient(rgba(255, 248, 251, 0.92), rgba(255, 248, 251, 0.96)),
+          url("assets/agents-kt-pattern.png");
+        background-position: center;
+        background-size: 620px auto;
+      }
+
+      .security-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 38px;
+      }
+
+      .security-item {
+        border-top: 1px solid var(--line);
+        padding-top: 20px;
+      }
+
+      .security-item strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 1.08rem;
+      }
+
+      .security-item p {
+        color: var(--muted);
+      }
+
+      .final-cta {
+        padding: 80px 0;
+        background: var(--red);
+        color: var(--white);
+      }
+
+      .final-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 28px;
+      }
+
+      .final-inner h2 {
+        max-width: 760px;
+        font-size: clamp(2.2rem, 5vw, 5.2rem);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .final-inner .button {
+        flex: 0 0 auto;
+        background: var(--ink);
+        color: var(--white);
+      }
+
+      .footer {
+        padding: 34px 0;
+        border-top: 1px solid var(--line);
+        background: var(--white);
+        color: var(--muted);
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        font-size: 0.92rem;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 18px;
+      }
+
+      @media (max-width: 980px) {
+        .hero-board,
+        .install-grid,
+        .proof-grid,
+        .final-inner {
+          grid-template-columns: 1fr;
+        }
+
+        .final-inner {
+          display: grid;
+        }
+
+        .feature-grid,
+        .protocols {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .primitive-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .nav-inner,
+        .section-inner,
+        .hero-inner {
+          width: min(100% - 28px, 1180px);
+        }
+
+        .nav-inner {
+          min-height: 62px;
+        }
+
+        .brand img {
+          width: 38px;
+        }
+
+        .nav-links {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+        }
+
+        .hero-inner {
+          gap: 28px;
+          padding: 46px 0 34px;
+        }
+
+        h1 {
+          width: 100%;
+          max-width: 100%;
+          overflow-wrap: break-word;
+          font-size: clamp(2.15rem, 9.4vw, 2.6rem);
+          line-height: 0.96;
+        }
+
+        .hero-lede {
+          width: 100%;
+          max-width: 31ch;
+          overflow-wrap: break-word;
+          font-size: 0.98rem;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .feature-grid,
+        .protocols,
+        .security-list,
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stat {
+          border-left: 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .stat:first-child {
+          border-top: 0;
+        }
+
+        section {
+          padding: 62px 0;
+        }
+
+        .feature {
+          min-height: 0;
+        }
+
+        .feature-icon {
+          margin-bottom: 24px;
+        }
+
+        .primitive-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .primitive {
+          min-height: 0;
+        }
+
+        .operator {
+          margin-bottom: 24px;
+        }
+
+        .release-row,
+        .footer-inner {
+          flex-direction: column;
+        }
+
+        .footer-inner {
+          align-items: flex-start;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="nav">
+        <div class="nav-inner">
+          <a class="brand" href="#" aria-label="Agents.KT home">
+            <img src="assets/agents-kt-sign.png" alt="" width="256" height="256" />
+            <span>Agents.KT</span>
+          </a>
+          <nav class="nav-links" aria-label="Primary navigation">
+            <a href="#runtime">Runtime</a>
+            <a href="#composition">Composition</a>
+            <a href="#trust">Trust</a>
+            <a class="nav-action" href="https://github.com/Deep-CodeAI/Agents.KT">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-inner">
+            <p class="eyebrow">Kotlin 2.4 · JDK 21+ · MIT</p>
+            <h1 id="hero-title"><span>Typed agents</span><span>for JVM teams.</span></h1>
+            <p class="hero-lede">
+              Agents.KT gives Kotlin developers a typed runtime with compiler-checked contracts,
+              least-privilege tools, MCP-native surfaces, and audit evidence that stays
+              close to the code that actually runs.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="https://github.com/Deep-CodeAI/Agents.KT">
+                Open GitHub
+              </a>
+              <a class="button button-secondary" href="#install">Install 0.8.2</a>
+            </div>
+
+          </div>
+        </section>
+
+        <section class="stats-strip" aria-label="Project facts">
+          <div class="section-inner stats-grid">
+            <div class="stat">
+              <b>0.8.2</b>
+              <span>Current Maven Central release</span>
+            </div>
+            <div class="stat">
+              <b>8</b>
+              <span>Model providers behind one interface</span>
+            </div>
+            <div class="stat">
+              <b>MCP</b>
+              <span>Client, server, and runner surfaces</span>
+            </div>
+            <div class="stat">
+              <b>JVM</b>
+              <span>Kotlin-native library and deployable JAR shape</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="install" id="install" aria-labelledby="install-title">
+          <div class="section-inner install-grid">
+            <div>
+              <p class="section-label">First 10 minutes</p>
+              <h2 class="section-heading" id="install-title">Drop it into Gradle and wire one typed job.</h2>
+              <p class="section-copy">
+                Each agent has one input type, one output type, and a focused set of
+                skills. Deterministic Kotlin lambdas and agentic tool loops live under
+                the same runtime shape.
+              </p>
+            </div>
+
+            <div class="install-card">
+              <div class="window-bar">
+                <div class="window-dots" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </div>
+                <span>build.gradle.kts</span>
+              </div>
+              <pre id="install-code"><code>dependencies {
+    implementation("ai.deep-code:agents-kt:0.8.2")
+}
+
+// Requirements:
+// JDK 21+, Kotlin 2.x, Gradle</code></pre>
+              <div class="copy-row">
+                <span>Published as ai.deep-code:agents-kt</span>
+                <button class="copy-button" type="button" data-copy="#install-code">Copy</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="runtime" aria-labelledby="runtime-title">
+          <div class="section-inner">
+            <p class="section-label">Runtime model</p>
+            <h2 class="section-heading" id="runtime-title">Boundaries that survive contact with production.</h2>
+            <p class="section-copy">
+              Agents.KT focuses on the parts a framework can make deterministic:
+              typed contracts, tool authorization, manifests, event streams, and
+              deployment shapes that fit existing Kotlin services.
+            </p>
+
+            <div class="feature-grid">
+              <article class="feature">
+                <div class="feature-icon">01</div>
+                <h3>Compiler-checked contracts</h3>
+                <p>
+                  `Agent&lt;IN, OUT&gt;` keeps responsibilities narrow. Purely typed
+                  composition fails at compile time when boundaries do not line up.
+                </p>
+              </article>
+              <article class="feature">
+                <div class="feature-icon">02</div>
+                <h3>Least-privilege tools</h3>
+                <p>
+                  Per-skill tool allowlists, typed handles, policy metadata, and
+                  before-interceptor hooks make access explicit and reviewable.
+                </p>
+              </article>
+              <article class="feature">
+                <div class="feature-icon">03</div>
+                <h3>Audit evidence by construction</h3>
+                <p>
+                  Permission manifests, JSONL exports, manifest hashes, and ledger
+                  verification turn runtime behavior into concrete review artifacts.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="dark-band" id="composition" aria-labelledby="composition-title">
+          <div class="section-inner">
+            <p class="section-label">Composition DSL</p>
+            <h2 class="section-heading" id="composition-title">Express the agent graph in the language your backend already speaks.</h2>
+            <p class="section-copy">
+              Sequential pipelines, parallel fan-out, forums, wrappers, loops, and
+              typed routing are first-class operators instead of orchestration glue.
+            </p>
+
+            <div class="primitive-grid" aria-label="Composition primitives">
+              <article class="primitive">
+                <span class="operator">then</span>
+                <h3>Pipeline</h3>
+                <p>Chain agents only when output and input types match.</p>
+              </article>
+              <article class="primitive">
+                <span class="operator">/</span>
+                <h3>Parallel</h3>
+                <p>Run branches concurrently against the same typed input.</p>
+              </article>
+              <article class="primitive">
+                <span class="operator">forum</span>
+                <h3>Council</h3>
+                <p>Collect specialist contributions and let a captain emit the verdict.</p>
+              </article>
+              <article class="primitive">
+                <span class="operator">wrap</span>
+                <h3>Teacher-student</h3>
+                <p>Let one agent produce the system prompt for another call.</p>
+              </article>
+              <article class="primitive">
+                <span class="operator">branch</span>
+                <h3>Typed routing</h3>
+                <p>Route by source-output shape with sealed-type support.</p>
+              </article>
+              <article class="primitive">
+                <span class="operator">loop</span>
+                <h3>Iteration</h3>
+                <p>Bounded feedback cycles without giving up runtime caps.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="trust" aria-labelledby="trust-title">
+          <div class="section-inner proof-grid">
+            <div>
+              <p class="section-label">Release truth</p>
+              <h2 class="section-heading" id="trust-title">A trust story with explicit non-goals.</h2>
+              <p class="section-copy">
+                The project is careful about the difference between in-runtime
+                enforcement and deployer-owned controls. That honesty is the point:
+                teams can review what the runtime owns and what still belongs to their
+                gateway, OS sandbox, or compliance process.
+              </p>
+
+              <div class="security-list">
+                <div class="security-item">
+                  <strong>Security model up front</strong>
+                  <p>Threat-model docs call out which boundaries are enforced and which are not.</p>
+                </div>
+                <div class="security-item">
+                  <strong>Policy hooks before execution</strong>
+                  <p>Deny, mutate, or substitute skill turns and tool calls before work runs.</p>
+                </div>
+                <div class="security-item">
+                  <strong>Manifest verification</strong>
+                  <p>CI can fail when capability boundaries widen unexpectedly.</p>
+                </div>
+                <div class="security-item">
+                  <strong>Observable runtime</strong>
+                  <p>OTel, LangSmith, Langfuse, JSONL, and typed events share the same story.</p>
+                </div>
+              </div>
+            </div>
+
+            <aside class="release-panel" aria-label="Current release facts">
+              <div class="release-row">
+                <strong>Current release</strong>
+                <span>0.8.2</span>
+              </div>
+              <div class="release-row">
+                <strong>Development version</strong>
+                <span>0.8.3-SNAPSHOT</span>
+              </div>
+              <div class="release-row">
+                <strong>Providers</strong>
+                <span>Ollama, Claude, OpenAI, DeepSeek, Kimi, OpenRouter, Perplexity, Gemini</span>
+              </div>
+              <div class="release-row">
+                <strong>Next theme</strong>
+                <span>Typed multi-agent coordination in 0.9.0</span>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="dark-band" aria-labelledby="interop-title">
+          <div class="section-inner">
+            <p class="section-label">Interop surfaces</p>
+            <h2 class="section-heading" id="interop-title">One Kotlin runtime, multiple protocol doors.</h2>
+            <p class="section-copy">
+              Agents.KT can live inside an app, expose an agent as a server, or talk
+              to external capabilities through protocol-native clients.
+            </p>
+
+            <div class="protocols">
+              <div class="protocol">
+                <strong>MCP</strong>
+                <span>Client, server, and standalone runner support.</span>
+              </div>
+              <div class="protocol">
+                <strong>A2A</strong>
+                <span>Server and typed client shape for agent-to-agent work.</span>
+              </div>
+              <div class="protocol">
+                <strong>AG-UI</strong>
+                <span>Streaming subset for lifecycle, text, reasoning, and tools.</span>
+              </div>
+              <div class="protocol">
+                <strong>NLWeb</strong>
+                <span>Partial /ask compatibility for single responses.</span>
+              </div>
+              <div class="protocol">
+                <strong>x402</strong>
+                <span>Experimental seller and guardrails-first buyer flows.</span>
+              </div>
+              <div class="protocol">
+                <strong>AGNTCY</strong>
+                <span>OASF export/import, identity verify, and DIR clients.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="security" aria-labelledby="security-title">
+          <div class="section-inner">
+            <p class="section-label">Who should pick it</p>
+            <h2 class="section-heading" id="security-title">Use it when the agent layer belongs in Kotlin.</h2>
+            <p class="section-copy">
+              Agents.KT is strongest when the team already ships Spring, Ktor,
+              Quarkus, or JVM services and wants the agent boundary to be code,
+              not an external Python sidecar.
+            </p>
+
+            <div class="feature-grid">
+              <article class="feature">
+                <div class="feature-icon">A</div>
+                <h3>Backend teams</h3>
+                <p>Keep agent orchestration inside the same language, build, and deployment model as the service.</p>
+              </article>
+              <article class="feature">
+                <div class="feature-icon">B</div>
+                <h3>Platform teams</h3>
+                <p>Expose controlled agent capabilities through MCP without rewriting the runtime around the wire format.</p>
+              </article>
+              <article class="feature">
+                <div class="feature-icon">C</div>
+                <h3>Regulated builders</h3>
+                <p>Produce manifests, runtime hashes, audit logs, and explicit policy decisions as review material.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="final-cta" aria-labelledby="final-title">
+          <div class="section-inner final-inner">
+            <h2 id="final-title">Start with one typed boundary, then compose the graph.</h2>
+            <a class="button" href="https://github.com/Deep-CodeAI/Agents.KT">View the repository</a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="section-inner footer-inner">
+          <span>Agents.KT is MIT licensed by Deep-Code.AI.</span>
+          <div class="footer-links">
+            <a href="https://github.com/Deep-CodeAI/Agents.KT/blob/main/docs/threat-model.md">Threat model</a>
+            <a href="https://github.com/Deep-CodeAI/Agents.KT/blob/main/docs/roadmap.md">Roadmap</a>
+            <a href="https://central.sonatype.com/artifact/ai.deep-code/agents-kt">Maven Central</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      for (const button of document.querySelectorAll("[data-copy]")) {
+        button.addEventListener("click", async () => {
+          const target = document.querySelector(button.dataset.copy);
+          const text = target ? target.textContent.trim() : "";
+          try {
+            await navigator.clipboard.writeText(text);
+            const previous = button.textContent;
+            button.textContent = "Copied";
+            window.setTimeout(() => {
+              button.textContent = previous;
+            }, 1400);
+          } catch {
+            button.textContent = "Select";
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
